@@ -88,7 +88,7 @@ async function importSalesFromSheet(
   columns: { name: number; purchase: number; sale: number; fees?: number },
   stats: { bags: number; sales: number; errors: string[] }
 ): Promise<void> {
-  const data = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+  const data = XLSX.utils.sheet_to_json(sheet, {
     header: 1,
   }) as unknown[][];
 
@@ -277,10 +277,9 @@ export async function POST() {
     // Import from historique
     const historiqueSheet = workbook.Sheets["historique"];
     if (historiqueSheet) {
-      const data = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-        historiqueSheet,
-        { header: 1 }
-      ) as unknown[][];
+      const data = XLSX.utils.sheet_to_json(historiqueSheet, {
+        header: 1,
+      }) as unknown[][];
 
       for (let i = 1; i < Math.min(data.length, 200); i++) {
         const row = data[i];
