@@ -5,6 +5,8 @@ import { Sale, Bag, User } from "@/lib/db/models";
 import { z } from "zod";
 import { sendEmail, saleNotificationEmail } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+
 const createSaleSchema = z.object({
   bagId: z.string().min(1, "Sac est requis"),
   saleDate: z.string().transform((str) => new Date(str)),
@@ -29,6 +31,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const bankAccountId = searchParams.get("bankAccountId");
     const platform = searchParams.get("platform");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const skip = (page - 1) * limit;
 
     // Build query
     const query: Record<string, unknown> = {};
@@ -41,16 +46,29 @@ export async function GET(request: NextRequest) {
       query.salePlatform = platform;
     }
 
-    const sales = await Sale.find(query)
-      .sort({ saleDate: -1 })
-      .populate({
-        path: "bagId",
-        select: "reference brand model photos purchasePrice refurbishmentCost",
-      })
-      .populate("bankAccountId", "label")
-      .populate("soldBy", "name");
+    const [sales, total] = await Promise.all([
+      Sale.find(query)
+        .sort({ saleDate: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate({
+          path: "bagId",
+          select: "reference brand model photos purchasePrice refurbishmentCost",
+        })
+        .populate("bankAccountId", "label")
+        .populate("soldBy", "name"),
+      Sale.countDocuments(query),
+    ]);
 
-    return NextResponse.json(sales);
+    return NextResponse.json({
+      sales,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error("Error fetching sales:", error);
     return NextResponse.json(

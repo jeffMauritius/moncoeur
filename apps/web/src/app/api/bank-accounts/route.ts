@@ -4,6 +4,8 @@ import dbConnect from "@/lib/db/mongodb";
 import { BankAccount } from "@/lib/db/models";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const createBankAccountSchema = z.object({
   label: z.string().min(1, "Libelle est requis"),
   description: z.string().optional(),

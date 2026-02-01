@@ -5,6 +5,8 @@ import { Bag, User } from "@/lib/db/models";
 import { z } from "zod";
 import { sendEmail, newBagNotificationEmail } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+
 const createBagSchema = z.object({
   brand: z.string().min(1, "Marque est requise"),
   model: z.string().min(1, "Modele est requis"),
@@ -45,6 +47,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const brand = searchParams.get("brand");
     const search = searchParams.get("search");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const skip = (page - 1) * limit;
 
     // Build query
     const query: Record<string, unknown> = {};
@@ -66,12 +71,25 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const bags = await Bag.find(query)
-      .sort({ createdAt: -1 })
-      .populate("purchaseBankAccountId", "label")
-      .populate("createdBy", "name");
+    const [bags, total] = await Promise.all([
+      Bag.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("purchaseBankAccountId", "label")
+        .populate("createdBy", "name"),
+      Bag.countDocuments(query),
+    ]);
 
-    return NextResponse.json(bags);
+    return NextResponse.json({
+      bags,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error("Error fetching bags:", error);
     return NextResponse.json(

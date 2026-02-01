@@ -4,6 +4,8 @@ import dbConnect from "@/lib/db/mongodb";
 import { User } from "@/lib/db/models";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const createUserSchema = z.object({
   email: z.string().email("Email invalide"),
   password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caracteres"),

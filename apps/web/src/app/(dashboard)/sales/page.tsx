@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, Loader2, ShoppingCart, Package, TrendingUp, TrendingDown } from "lucide-react";
+import { Eye, Loader2, ShoppingCart, Package, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { PLATFORMS } from "@moncoeur/shared";
 
 interface BankAccount {
@@ -54,9 +54,22 @@ interface Sale {
   soldBy: { name: string };
 }
 
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [bankAccountFilter, setBankAccountFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
@@ -76,30 +89,39 @@ export default function SalesPage() {
     fetchBankAccounts();
   }, []);
 
-  useEffect(() => {
-    async function fetchSales() {
-      try {
-        const params = new URLSearchParams();
-        if (bankAccountFilter !== "all") {
-          params.append("bankAccountId", bankAccountFilter);
-        }
-        if (platformFilter !== "all") {
-          params.append("platform", platformFilter);
-        }
-
-        const res = await fetch(`/api/sales?${params}`);
-        if (res.ok) {
-          const data = await res.json();
-          setSales(data);
-        }
-      } catch {
-        console.error("Error fetching sales");
-      } finally {
-        setLoading(false);
+  async function fetchSales(page = 1) {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append("page", String(page));
+      params.append("limit", "20");
+      if (bankAccountFilter !== "all") {
+        params.append("bankAccountId", bankAccountFilter);
       }
+      if (platformFilter !== "all") {
+        params.append("platform", platformFilter);
+      }
+
+      const res = await fetch(`/api/sales?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSales(data.sales);
+        setPagination(data.pagination);
+      }
+    } catch {
+      console.error("Error fetching sales");
+    } finally {
+      setLoading(false);
     }
-    fetchSales();
+  }
+
+  useEffect(() => {
+    fetchSales(1);
   }, [bankAccountFilter, platformFilter]);
+
+  function handlePageChange(newPage: number) {
+    fetchSales(newPage);
+  }
 
   // Calculate totals
   const totalRevenue = sales.reduce((sum, s) => sum + s.salePrice, 0);
@@ -109,7 +131,7 @@ export default function SalesPage() {
       ? sales.reduce((sum, s) => sum + s.marginPercent, 0) / sales.length
       : 0;
 
-  if (loading) {
+  if (loading && sales.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -145,7 +167,7 @@ export default function SalesPage() {
               })}
             </div>
             <p className="text-xs text-muted-foreground">
-              {sales.length} vente(s)
+              {pagination.total} vente(s) au total
             </p>
           </CardContent>
         </Card>
@@ -184,7 +206,7 @@ export default function SalesPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sales.length}</div>
+            <div className="text-2xl font-bold">{pagination.total}</div>
             <p className="text-xs text-muted-foreground">Sacs vendus</p>
           </CardContent>
         </Card>
@@ -230,7 +252,7 @@ export default function SalesPage() {
         <CardHeader>
           <CardTitle>Historique des ventes</CardTitle>
           <CardDescription>
-            {sales.length} vente(s) trouvee(s)
+            {pagination.total} vente(s) trouvee(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -243,90 +265,121 @@ export default function SalesPage() {
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[80px]">Photo</TableHead>
-                  <TableHead>Sac</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Prix vente</TableHead>
-                  <TableHead>Marge</TableHead>
-                  <TableHead>Plateforme</TableHead>
-                  <TableHead>Compte</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sales.map((sale) => (
-                  <TableRow key={sale._id}>
-                    <TableCell>
-                      {sale.bagId?.photos && sale.bagId.photos.length > 0 ? (
-                        <div className="relative w-12 h-12 rounded-md overflow-hidden bg-muted">
-                          <Image
-                            src={sale.bagId.photos[0]}
-                            alt={`${sale.bagId?.brand} ${sale.bagId?.model}`}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
-                          <Package className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {sale.bagId?.brand} - {sale.bagId?.model}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-mono">
-                          {sale.bagId?.reference}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(sale.saleDate).toLocaleDateString("fr-FR")}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {sale.salePrice.toLocaleString("fr-FR", {
-                        style: "currency",
-                        currency: "EUR",
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <div
-                        className={
-                          sale.margin >= 0 ? "text-green-600" : "text-red-600"
-                        }
-                      >
-                        <p className="font-medium">
-                          {sale.margin >= 0 ? "+" : ""}
-                          {sale.margin.toLocaleString("fr-FR", {
-                            style: "currency",
-                            currency: "EUR",
-                          })}
-                        </p>
-                        <p className="text-xs">
-                          {sale.marginPercent.toFixed(1)}%
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {PLATFORMS[sale.salePlatform] || sale.salePlatform}
-                    </TableCell>
-                    <TableCell>{sale.bankAccountId?.label || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/sales/${sale._id}`}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[80px]">Photo</TableHead>
+                    <TableHead>Sac</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Prix vente</TableHead>
+                    <TableHead>Marge</TableHead>
+                    <TableHead>Plateforme</TableHead>
+                    <TableHead>Compte</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {sales.map((sale) => (
+                    <TableRow key={sale._id}>
+                      <TableCell>
+                        {sale.bagId?.photos && sale.bagId.photos.length > 0 ? (
+                          <div className="relative w-12 h-12 rounded-md overflow-hidden bg-muted">
+                            <Image
+                              src={sale.bagId.photos[0]}
+                              alt={`${sale.bagId?.brand} ${sale.bagId?.model}`}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">
+                            {sale.bagId?.brand} - {sale.bagId?.model}
+                          </p>
+                          <p className="text-xs text-muted-foreground font-mono">
+                            {sale.bagId?.reference}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(sale.saleDate).toLocaleDateString("fr-FR")}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {sale.salePrice.toLocaleString("fr-FR", {
+                          style: "currency",
+                          currency: "EUR",
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <div
+                          className={
+                            sale.margin >= 0 ? "text-green-600" : "text-red-600"
+                          }
+                        >
+                          <p className="font-medium">
+                            {sale.margin >= 0 ? "+" : ""}
+                            {sale.margin.toLocaleString("fr-FR", {
+                              style: "currency",
+                              currency: "EUR",
+                            })}
+                          </p>
+                          <p className="text-xs">
+                            {sale.marginPercent.toFixed(1)}%
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {PLATFORMS[sale.salePlatform] || sale.salePlatform}
+                      </TableCell>
+                      <TableCell>{sale.bankAccountId?.label || "-"}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/sales/${sale._id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Page {pagination.page} sur {pagination.totalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page <= 1 || loading}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Precedent
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page >= pagination.totalPages || loading}
+                    >
+                      Suivant
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
