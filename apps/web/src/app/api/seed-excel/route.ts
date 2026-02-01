@@ -102,7 +102,9 @@ async function importSalesFromData(
 
       const { brand, model } = extractBrand(description);
 
+      bagCounter++;
       const bag = await Bag.create({
+        reference: generateReference(bagCounter),
         brand,
         model,
         description,
@@ -142,6 +144,14 @@ async function importSalesFromData(
   }
 }
 
+// Generate unique reference
+function generateReference(index: number): string {
+  const year = new Date().getFullYear();
+  return `MC-${year}-${String(index).padStart(5, "0")}`;
+}
+
+let bagCounter = 0;
+
 export async function POST() {
   try {
     await dbConnect();
@@ -153,6 +163,8 @@ export async function POST() {
         { status: 400 }
       );
     }
+
+    bagCounter = 0;
 
     // Create users if they don't exist
     let adminUser = await User.findOne({ email: "nadia@moncoeur.app" });
@@ -221,7 +233,9 @@ export async function POST() {
         const { brand, model } = extractBrand(row.descriptif);
         const purchaseDate = parseDate(row.date);
 
+        bagCounter++;
         await Bag.create({
+          reference: generateReference(bagCounter),
           brand,
           model,
           description: row.descriptif,
@@ -276,7 +290,9 @@ export async function POST() {
 
         const { brand, model } = extractBrand(description);
 
+        bagCounter++;
         const bag = await Bag.create({
+          reference: generateReference(bagCounter),
           brand,
           model,
           description,
