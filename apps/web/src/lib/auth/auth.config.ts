@@ -4,6 +4,7 @@ import type { NextAuthConfig } from "next-auth";
 // It should not import any Node.js modules like mongoose
 export const authConfig: NextAuthConfig = {
   providers: [], // Providers will be added in auth.ts
+  trustHost: true, // Required for Vercel deployment
   callbacks: {
     async authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
