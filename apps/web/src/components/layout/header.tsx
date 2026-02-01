@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User, Video } from "lucide-react";
 import Link from "next/link";
+import { MobileSidebar } from "./mobile-sidebar";
 
 interface HeaderProps {
   user: {
@@ -33,9 +34,10 @@ export function Header({ user }: HeaderProps) {
   const roleLabel = user.role === "admin" ? "Administrateur" : "Vendeur";
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-6">
+    <header className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
       <div className="flex items-center gap-4">
-        <h1 className="text-lg font-semibold text-muted-foreground">
+        <MobileSidebar userRole={user.role} />
+        <h1 className="text-lg font-semibold text-muted-foreground hidden sm:block">
           Gestion des sacs de luxe
         </h1>
       </div>

@@ -40,7 +40,7 @@ export function Sidebar({ userRole }: SidebarProps) {
   );
 
   return (
-    <div className="flex h-full w-64 flex-col bg-white border-r">
+    <div className="hidden md:flex h-full w-64 flex-col bg-white border-r">
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 px-6 border-b">
         <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
