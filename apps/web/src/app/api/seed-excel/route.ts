@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import * as XLSX from "xlsx";
-import path from "path";
 import mongoose from "mongoose";
 import dbConnect from "@/lib/db/mongodb";
 import { User, BankAccount, Bag, Sale } from "@/lib/db/models";
+import seedData from "./data.json";
 
 export const dynamic = "force-dynamic";
 
@@ -79,19 +78,15 @@ function extractBrand(description: string): { brand: string; model: string } {
   return { brand: "Autre", model: description };
 }
 
-// Helper to import sales from a sheet
-async function importSalesFromSheet(
-  sheet: XLSX.WorkSheet,
+// Helper to import sales from array data
+async function importSalesFromData(
+  data: unknown[][],
   sheetName: string,
   bankAccountId: mongoose.Types.ObjectId,
   adminUserId: mongoose.Types.ObjectId,
   columns: { name: number; purchase: number; sale: number; fees?: number },
   stats: { bags: number; sales: number; errors: string[] }
 ): Promise<void> {
-  const data = XLSX.utils.sheet_to_json(sheet, {
-    header: 1,
-  }) as unknown[][];
-
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row || !row[columns.name] || !row[columns.sale]) continue;
@@ -123,7 +118,8 @@ async function importSalesFromSheet(
       stats.bags++;
 
       const margin = salePrice - purchasePrice - fees;
-      const marginPercent = purchasePrice > 0 ? (margin / purchasePrice) * 100 : 0;
+      const marginPercent =
+        purchasePrice > 0 ? (margin / purchasePrice) * 100 : 0;
 
       await Sale.create({
         bagId: bag._id,
@@ -139,7 +135,9 @@ async function importSalesFromSheet(
       });
       stats.sales++;
     } catch (error) {
-      stats.errors.push(`${sheetName} row ${i + 1}: ${(error as Error).message}`);
+      stats.errors.push(
+        `${sheetName} row ${i + 1}: ${(error as Error).message}`
+      );
     }
   }
 }
@@ -155,9 +153,6 @@ export async function POST() {
         { status: 400 }
       );
     }
-
-    const filePath = path.join(process.cwd(), "data", "ventes.xlsx");
-    const workbook = XLSX.readFile(filePath);
 
     // Create users if they don't exist
     let adminUser = await User.findOne({ email: "nadia@moncoeur.app" });
@@ -211,132 +206,117 @@ export async function POST() {
       errors: [] as string[],
     };
 
-    // Import purchases from "achats" sheet as bags
-    const achatsSheet = workbook.Sheets["achats"];
-    if (achatsSheet) {
-      const achatsData = XLSX.utils.sheet_to_json<{
-        date: number;
-        descriptif: string;
-        prix: number;
-      }>(achatsSheet);
+    // Import purchases from "achats" as bags
+    const achatsData = seedData.achats as Array<{
+      date: number;
+      descriptif: string;
+      prix: number;
+    }>;
 
-      for (let i = 0; i < achatsData.length; i++) {
-        const row = achatsData[i];
-        if (!row.descriptif || !row.prix) continue;
+    for (let i = 0; i < achatsData.length; i++) {
+      const row = achatsData[i];
+      if (!row.descriptif || !row.prix) continue;
 
-        try {
-          const { brand, model } = extractBrand(row.descriptif);
-          const purchaseDate = parseDate(row.date);
+      try {
+        const { brand, model } = extractBrand(row.descriptif);
+        const purchaseDate = parseDate(row.date);
 
-          await Bag.create({
-            brand,
-            model,
-            description: row.descriptif,
-            condition: "bon",
-            purchaseDate,
-            purchasePrice: row.prix,
-            purchasePlatform: "vinted",
-            purchaseBankAccountId: bankAccounts["beatrice"],
-            refurbishmentCost: 0,
-            status: "en_vente",
-            createdBy: adminUser._id,
-          });
-          stats.bags++;
-        } catch (error) {
-          stats.errors.push(`Achats row ${i + 1}: ${(error as Error).message}`);
-        }
+        await Bag.create({
+          brand,
+          model,
+          description: row.descriptif,
+          condition: "bon",
+          purchaseDate,
+          purchasePrice: row.prix,
+          purchasePlatform: "vinted",
+          purchaseBankAccountId: bankAccounts["beatrice"],
+          refurbishmentCost: 0,
+          status: "en_vente",
+          createdBy: adminUser._id,
+        });
+        stats.bags++;
+      } catch (error) {
+        stats.errors.push(`Achats row ${i + 1}: ${(error as Error).message}`);
       }
     }
 
     // Import sales from beatrice
-    const beatriceSheet = workbook.Sheets["beatrice"];
-    if (beatriceSheet) {
-      await importSalesFromSheet(
-        beatriceSheet,
-        "beatrice",
-        bankAccounts["beatrice"],
-        adminUser._id,
-        { name: 0, purchase: 1, sale: 2, fees: 3 },
-        stats
-      );
-    }
+    await importSalesFromData(
+      seedData.beatrice as unknown[][],
+      "beatrice",
+      bankAccounts["beatrice"],
+      adminUser._id,
+      { name: 0, purchase: 1, sale: 2, fees: 3 },
+      stats
+    );
 
     // Import sales from goergio
-    const goergioSheet = workbook.Sheets["goergio"];
-    if (goergioSheet) {
-      await importSalesFromSheet(
-        goergioSheet,
-        "goergio",
-        bankAccounts["goergio"],
-        adminUser._id,
-        { name: 0, purchase: 1, sale: 2, fees: 3 },
-        stats
-      );
-    }
+    await importSalesFromData(
+      seedData.goergio as unknown[][],
+      "goergio",
+      bankAccounts["goergio"],
+      adminUser._id,
+      { name: 0, purchase: 1, sale: 2, fees: 3 },
+      stats
+    );
 
     // Import from historique
-    const historiqueSheet = workbook.Sheets["historique"];
-    if (historiqueSheet) {
-      const data = XLSX.utils.sheet_to_json(historiqueSheet, {
-        header: 1,
-      }) as unknown[][];
+    const historiqueData = seedData.historique as unknown[][];
+    for (let i = 1; i < historiqueData.length; i++) {
+      const row = historiqueData[i];
+      if (!row || !row[1] || !row[3]) continue;
 
-      for (let i = 1; i < Math.min(data.length, 200); i++) {
-        const row = data[i];
-        if (!row || !row[1] || !row[3]) continue;
+      try {
+        const saleDate = parseDate(row[0]);
+        const description = String(row[1]);
+        const purchasePrice = Number(row[2]) || 0;
+        const salePrice = Number(row[3]) || 0;
 
-        try {
-          const saleDate = parseDate(row[0]);
-          const description = String(row[1]);
-          const purchasePrice = Number(row[2]) || 0;
-          const salePrice = Number(row[3]) || 0;
+        if (salePrice <= 0) continue;
 
-          if (salePrice <= 0) continue;
+        const { brand, model } = extractBrand(description);
 
-          const { brand, model } = extractBrand(description);
+        const bag = await Bag.create({
+          brand,
+          model,
+          description,
+          condition: "bon",
+          purchaseDate: saleDate,
+          purchasePrice,
+          purchasePlatform: "vinted",
+          purchaseBankAccountId: bankAccounts["beatrice"],
+          refurbishmentCost: 0,
+          status: "vendu",
+          createdBy: adminUser._id,
+        });
+        stats.bags++;
 
-          const bag = await Bag.create({
-            brand,
-            model,
-            description,
-            condition: "bon",
-            purchaseDate: saleDate,
-            purchasePrice,
-            purchasePlatform: "vinted",
-            purchaseBankAccountId: bankAccounts["beatrice"],
-            refurbishmentCost: 0,
-            status: "vendu",
-            createdBy: adminUser._id,
-          });
-          stats.bags++;
+        const margin = salePrice - purchasePrice;
+        const marginPercent =
+          purchasePrice > 0 ? (margin / purchasePrice) * 100 : 0;
 
-          const margin = salePrice - purchasePrice;
-          const marginPercent =
-            purchasePrice > 0 ? (margin / purchasePrice) * 100 : 0;
-
-          await Sale.create({
-            bagId: bag._id,
-            saleDate,
-            salePrice,
-            salePlatform: "vinted",
-            platformFees: 0,
-            shippingCost: 0,
-            bankAccountId: bankAccounts["beatrice"],
-            margin,
-            marginPercent,
-            soldBy: adminUser._id,
-          });
-          stats.sales++;
-        } catch (error) {
-          stats.errors.push(
-            `Historique row ${i + 1}: ${(error as Error).message}`
-          );
-        }
+        await Sale.create({
+          bagId: bag._id,
+          saleDate,
+          salePrice,
+          salePlatform: "vinted",
+          platformFees: 0,
+          shippingCost: 0,
+          bankAccountId: bankAccounts["beatrice"],
+          margin,
+          marginPercent,
+          soldBy: adminUser._id,
+        });
+        stats.sales++;
+      } catch (error) {
+        stats.errors.push(
+          `Historique row ${i + 1}: ${(error as Error).message}`
+        );
       }
     }
 
     return NextResponse.json({
-      message: "Database seeded successfully from Excel",
+      message: "Database seeded successfully",
       stats: {
         bagsCreated: stats.bags,
         salesCreated: stats.sales,
@@ -345,7 +325,7 @@ export async function POST() {
       },
     });
   } catch (error) {
-    console.error("Seed Excel error:", error);
+    console.error("Seed error:", error);
     return NextResponse.json(
       { error: "Failed to seed database", details: (error as Error).message },
       { status: 500 }
