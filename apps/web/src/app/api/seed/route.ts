@@ -22,21 +22,21 @@ export async function POST() {
     const users = await User.create([
       {
         email: "nadia@moncoeur.app",
-        password: "nadia123", // Will be hashed by the model
+        password: "Test123456!", // Will be hashed by the model
         name: "Nadia",
         role: "admin",
         isActive: true,
       },
       {
         email: "jeff@moncoeur.app",
-        password: "jeff123", // Will be hashed by the model
+        password: "Test123456!", // Will be hashed by the model
         name: "Jeff",
         role: "admin",
         isActive: true,
       },
       {
         email: "jeannette@moncoeur.app",
-        password: "jeannette123", // Will be hashed by the model
+        password: "Test123456!", // Will be hashed by the model
         name: "Jeannette",
         role: "seller",
         isActive: true,
