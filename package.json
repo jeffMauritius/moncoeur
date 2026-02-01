@@ -1,0 +1,22 @@
+{
+  "name": "moncoeur",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "dev:web": "pnpm --filter @moncoeur/web dev",
+    "dev:api": "pnpm --filter @moncoeur/api dev",
+    "build": "pnpm run --parallel build",
+    "build:web": "pnpm --filter @moncoeur/web build",
+    "build:api": "pnpm --filter @moncoeur/api build",
+    "lint": "pnpm run --parallel lint",
+    "clean": "pnpm run --parallel clean"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

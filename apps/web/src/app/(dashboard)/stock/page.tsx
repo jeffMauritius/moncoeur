@@ -1,0 +1,258 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Search, QrCode, Eye, Loader2, Package } from "lucide-react";
+
+const STATUSES = {
+  en_commande: { label: "En commande", color: "bg-yellow-100 text-yellow-800" },
+  en_transit: { label: "En transit", color: "bg-blue-100 text-blue-800" },
+  recu: { label: "Recu", color: "bg-purple-100 text-purple-800" },
+  en_remise_en_etat: { label: "En remise en etat", color: "bg-orange-100 text-orange-800" },
+  pret_a_vendre: { label: "Pret a vendre", color: "bg-green-100 text-green-800" },
+  en_vente: { label: "En vente", color: "bg-indigo-100 text-indigo-800" },
+  vendu: { label: "Vendu", color: "bg-gray-100 text-gray-800" },
+};
+
+interface Bag {
+  _id: string;
+  reference: string;
+  brand: string;
+  model: string;
+  description: string;
+  purchasePrice: number;
+  status: keyof typeof STATUSES;
+  photos: string[];
+  createdAt: string;
+}
+
+export default function StockPage() {
+  const [bags, setBags] = useState<Bag[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    async function loadBags() {
+      try {
+        const params = new URLSearchParams();
+        if (statusFilter !== "all") {
+          params.append("status", statusFilter);
+        }
+
+        const res = await fetch(`/api/bags?${params}`);
+        if (res.ok) {
+          const data = await res.json();
+          setBags(data);
+        }
+      } catch {
+        console.error("Error fetching bags");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadBags();
+  }, [statusFilter]);
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") {
+        params.append("status", statusFilter);
+      }
+      if (search) {
+        params.append("search", search);
+      }
+
+      const res = await fetch(`/api/bags?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBags(data);
+      }
+    } catch {
+      console.error("Error fetching bags");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Stock</h1>
+          <p className="text-muted-foreground">
+            Gerez votre inventaire de sacs
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/stock/scan">
+              <QrCode className="mr-2 h-4 w-4" />
+              Scanner
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/stock/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Nouveau sac
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <form onSubmit={handleSearch} className="flex gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher par reference, marque, modele..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Tous les statuts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                {Object.entries(STATUSES).map(([key, { label }]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button type="submit">Rechercher</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Bags Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des sacs</CardTitle>
+          <CardDescription>
+            {bags.length} sac(s) trouve(s)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {bags.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">Aucun sac</h3>
+              <p className="text-muted-foreground">
+                Commencez par ajouter votre premier sac
+              </p>
+              <Button asChild className="mt-4">
+                <Link href="/stock/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Ajouter un sac
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[80px]">Photo</TableHead>
+                  <TableHead>Reference</TableHead>
+                  <TableHead>Marque</TableHead>
+                  <TableHead>Modele</TableHead>
+                  <TableHead>Prix achat</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bags.map((bag) => (
+                  <TableRow key={bag._id}>
+                    <TableCell>
+                      {bag.photos && bag.photos.length > 0 ? (
+                        <div className="relative w-16 h-16 rounded-md overflow-hidden bg-muted">
+                          <Image
+                            src={bag.photos[0]}
+                            alt={`${bag.brand} ${bag.model}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-md bg-muted flex items-center justify-center">
+                          <Package className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {bag.reference}
+                    </TableCell>
+                    <TableCell className="font-medium">{bag.brand}</TableCell>
+                    <TableCell>{bag.model}</TableCell>
+                    <TableCell>
+                      {bag.purchasePrice.toLocaleString("fr-FR", {
+                        style: "currency",
+                        currency: "EUR",
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={STATUSES[bag.status]?.color || ""}>
+                        {STATUSES[bag.status]?.label || bag.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link href={`/stock/${bag._id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
