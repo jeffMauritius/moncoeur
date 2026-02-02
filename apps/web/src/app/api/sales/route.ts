@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const bankAccountId = searchParams.get("bankAccountId");
     const platform = searchParams.get("platform");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const skip = (page - 1) * limit;
@@ -44,6 +46,20 @@ export async function GET(request: NextRequest) {
 
     if (platform && platform !== "all") {
       query.salePlatform = platform;
+    }
+
+    // Date range filter
+    if (startDate || endDate) {
+      query.saleDate = {};
+      if (startDate) {
+        (query.saleDate as Record<string, Date>).$gte = new Date(startDate);
+      }
+      if (endDate) {
+        // Add one day to include the end date fully
+        const end = new Date(endDate);
+        end.setDate(end.getDate() + 1);
+        (query.saleDate as Record<string, Date>).$lt = end;
+      }
     }
 
     const [sales, total] = await Promise.all([

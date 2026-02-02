@@ -14,8 +14,6 @@ import {
   Landmark,
   Users,
   Settings,
-  Video,
-  QrCode,
   FileSpreadsheet,
   Menu,
 } from "lucide-react";
@@ -28,12 +26,10 @@ const navigation = [
   { name: "Tableau de bord", href: "/", icon: LayoutDashboard, roles: ["admin", "seller"] },
   { name: "Stock", href: "/stock", icon: Package, roles: ["admin", "seller"] },
   { name: "Ventes", href: "/sales", icon: ShoppingCart, roles: ["admin", "seller"] },
-  { name: "Scanner QR", href: "/stock/scan", icon: QrCode, roles: ["admin", "seller"] },
-  { name: "Video Chat", href: "/video-chat", icon: Video, roles: ["admin", "seller"] },
   { name: "Comptes bancaires", href: "/bank-accounts", icon: Landmark, roles: ["admin"] },
   { name: "Utilisateurs", href: "/users", icon: Users, roles: ["admin"] },
   { name: "Import Excel", href: "/import", icon: FileSpreadsheet, roles: ["admin"] },
-  { name: "Parametres", href: "/settings", icon: Settings, roles: ["admin", "seller"] },
+  { name: "Parametres", href: "/settings", icon: Settings, roles: ["admin"] },
 ];
 
 export function MobileSidebar({ userRole }: MobileSidebarProps) {

@@ -47,6 +47,7 @@ interface Bag {
   model: string;
   description: string;
   purchasePrice: number;
+  purchaseBankAccountId?: { _id: string; label: string };
   status: keyof typeof STATUSES;
   photos: string[];
   createdAt: string;
@@ -69,7 +70,7 @@ export default function StockPage() {
   });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("disponible");
 
   async function loadBags(page = 1) {
     setLoading(true);
@@ -162,6 +163,7 @@ export default function StockPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="disponible">Disponible (Prêt + En vente)</SelectItem>
                 {Object.entries(STATUSES).map(([key, { label }]) => (
                   <SelectItem key={key} value={key}>
                     {label}
@@ -209,6 +211,7 @@ export default function StockPage() {
                     <TableHead>Marque</TableHead>
                     <TableHead>Modele</TableHead>
                     <TableHead>Prix achat</TableHead>
+                    <TableHead>Compte</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -242,6 +245,9 @@ export default function StockPage() {
                           style: "currency",
                           currency: "EUR",
                         })}
+                      </TableCell>
+                      <TableCell>
+                        {bag.purchaseBankAccountId?.label || "-"}
                       </TableCell>
                       <TableCell>
                         <Badge className={STATUSES[bag.status]?.color || ""}>

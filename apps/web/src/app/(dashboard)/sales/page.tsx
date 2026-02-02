@@ -26,7 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, Loader2, ShoppingCart, Package, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Eye, Loader2, ShoppingCart, Package, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { PLATFORMS } from "@moncoeur/shared";
 
 interface BankAccount {
@@ -73,6 +75,8 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [bankAccountFilter, setBankAccountFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     async function fetchBankAccounts() {
@@ -101,6 +105,12 @@ export default function SalesPage() {
       if (platformFilter !== "all") {
         params.append("platform", platformFilter);
       }
+      if (startDate) {
+        params.append("startDate", startDate);
+      }
+      if (endDate) {
+        params.append("endDate", endDate);
+      }
 
       const res = await fetch(`/api/sales?${params}`);
       if (res.ok) {
@@ -117,10 +127,17 @@ export default function SalesPage() {
 
   useEffect(() => {
     fetchSales(1);
-  }, [bankAccountFilter, platformFilter]);
+  }, [bankAccountFilter, platformFilter, startDate, endDate]);
 
   function handlePageChange(newPage: number) {
     fetchSales(newPage);
+  }
+
+  function resetFilters() {
+    setBankAccountFilter("all");
+    setPlatformFilter("all");
+    setStartDate("");
+    setEndDate("");
   }
 
   // Calculate totals
@@ -215,7 +232,7 @@ export default function SalesPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <Select value={bankAccountFilter} onValueChange={setBankAccountFilter}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Tous les comptes" />
@@ -243,6 +260,33 @@ export default function SalesPage() {
                 ))}
               </SelectContent>
             </Select>
+
+            <div className="flex items-center gap-2">
+              <Label htmlFor="startDate" className="text-sm whitespace-nowrap">Du</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-[160px]"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label htmlFor="endDate" className="text-sm whitespace-nowrap">Au</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-[160px]"
+              />
+            </div>
+
+            <Button variant="outline" onClick={resetFilters}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Reinitialiser
+            </Button>
           </div>
         </CardContent>
       </Card>

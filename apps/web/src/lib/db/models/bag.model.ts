@@ -34,6 +34,8 @@ export interface IBagDocument {
   refurbishmentCost: number;
   refurbishmentProvider?: string;
   refurbishmentNotes?: string;
+  salePrice?: number;
+  saleNotes?: string;
   photos: string[];
   status: BagStatus;
   qrCodeUrl?: string;
@@ -48,7 +50,6 @@ const BagSchema = new Schema<IBagDocument>(
   {
     reference: {
       type: String,
-      required: true,
       unique: true,
     },
     brand: {
@@ -108,6 +109,14 @@ const BagSchema = new Schema<IBagDocument>(
       trim: true,
     },
     refurbishmentNotes: {
+      type: String,
+      trim: true,
+    },
+    salePrice: {
+      type: Number,
+      min: [0, "Le prix ne peut pas etre negatif"],
+    },
+    saleNotes: {
       type: String,
       trim: true,
     },

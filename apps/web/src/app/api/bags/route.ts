@@ -21,6 +21,8 @@ const createBagSchema = z.object({
   refurbishmentCost: z.number().min(0).optional().default(0),
   refurbishmentProvider: z.string().optional(),
   refurbishmentNotes: z.string().optional(),
+  salePrice: z.number().min(0).optional(),
+  saleNotes: z.string().optional(),
   photos: z.array(z.string()).optional().default([]),
   status: z.enum([
     "en_commande",
@@ -53,9 +55,17 @@ export async function GET(request: NextRequest) {
 
     // Build query
     const query: Record<string, unknown> = {};
+    let customSort: { [key: string]: 1 | -1 } = { createdAt: -1 };
 
     if (status && status !== "all") {
-      query.status = status;
+      if (status === "disponible") {
+        // Filter for both "pret_a_vendre" and "en_vente"
+        query.status = { $in: ["pret_a_vendre", "en_vente"] };
+        // Sort to show "pret_a_vendre" first (p > e alphabetically), then by date
+        customSort = { status: -1, createdAt: -1 };
+      } else {
+        query.status = status;
+      }
     }
 
     if (brand && brand !== "all") {
@@ -73,7 +83,7 @@ export async function GET(request: NextRequest) {
 
     const [bags, total] = await Promise.all([
       Bag.find(query)
-        .sort({ createdAt: -1 })
+        .sort(customSort)
         .skip(skip)
         .limit(limit)
         .populate("purchaseBankAccountId", "label")

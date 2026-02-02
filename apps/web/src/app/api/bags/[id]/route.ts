@@ -18,6 +18,8 @@ const updateBagSchema = z.object({
   refurbishmentCost: z.number().min(0).optional(),
   refurbishmentProvider: z.string().optional(),
   refurbishmentNotes: z.string().optional(),
+  salePrice: z.number().min(0).optional(),
+  saleNotes: z.string().optional(),
   photos: z.array(z.string()).optional(),
   status: z.enum([
     "en_commande",

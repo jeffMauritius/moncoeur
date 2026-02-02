@@ -52,6 +52,8 @@ export default function NewBagPage() {
     refurbishmentProvider: "",
     refurbishmentNotes: "",
     status: "en_commande",
+    salePrice: "",
+    saleNotes: "",
   });
 
   useEffect(() => {
@@ -119,6 +121,7 @@ export default function NewBagPage() {
           ...formData,
           purchasePrice: parseFloat(formData.purchasePrice),
           refurbishmentCost: parseFloat(formData.refurbishmentCost) || 0,
+          salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
           photos,
         }),
       });
@@ -386,6 +389,40 @@ export default function NewBagPage() {
                   onChange={(e) => setFormData({ ...formData, refurbishmentNotes: e.target.value })}
                   placeholder="Notes sur la remise en etat..."
                   rows={2}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sale Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Informations de vente</CardTitle>
+              <CardDescription>
+                Details pour la vente (optionnel)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="salePrice">Prix de vente (EUR)</Label>
+                <Input
+                  id="salePrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.salePrice}
+                  onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="saleNotes">Commentaire</Label>
+                <Textarea
+                  id="saleNotes"
+                  value={formData.saleNotes}
+                  onChange={(e) => setFormData({ ...formData, saleNotes: e.target.value })}
+                  placeholder="Notes sur la vente..."
+                  rows={3}
                 />
               </div>
             </CardContent>

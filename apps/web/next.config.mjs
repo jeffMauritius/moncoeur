@@ -5,6 +5,14 @@ const nextConfig = {
       "/api/seed-excel": ["./data/**/*"],
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
