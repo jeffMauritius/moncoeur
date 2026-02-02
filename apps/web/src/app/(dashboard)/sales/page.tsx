@@ -63,6 +63,16 @@ interface Pagination {
   totalPages: number;
 }
 
+// Get current year date range for default filter
+function getCurrentYearDateRange() {
+  const year = new Date().getFullYear();
+  const startDate = `${year}-01-01`;
+  const endDate = `${year}-12-31`;
+  return { startDate, endDate };
+}
+
+const defaultDateRange = getCurrentYearDateRange();
+
 export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -75,8 +85,8 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [bankAccountFilter, setBankAccountFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(defaultDateRange.startDate);
+  const [endDate, setEndDate] = useState(defaultDateRange.endDate);
 
   useEffect(() => {
     async function fetchBankAccounts() {
@@ -136,8 +146,9 @@ export default function SalesPage() {
   function resetFilters() {
     setBankAccountFilter("all");
     setPlatformFilter("all");
-    setStartDate("");
-    setEndDate("");
+    const { startDate, endDate } = getCurrentYearDateRange();
+    setStartDate(startDate);
+    setEndDate(endDate);
   }
 
   // Calculate totals
