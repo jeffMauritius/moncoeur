@@ -105,6 +105,22 @@ export async function PUT(
       }
     }
 
+    // Check if status is being changed to "vendu"
+    const isBeingSold = validatedData.status === "vendu" && existingBag.status !== "vendu";
+
+    // If being sold, check if sale info is available
+    if (isBeingSold) {
+      const salePrice = validatedData.salePrice ?? existingBag.salePrice;
+      const salePlatform = validatedData.salePlatform ?? existingBag.salePlatform;
+
+      if (!salePrice || !salePlatform) {
+        return NextResponse.json(
+          { error: "Veuillez renseigner le prix de vente et la plateforme avant de marquer comme vendu" },
+          { status: 400 }
+        );
+      }
+    }
+
     const bag = await Bag.findByIdAndUpdate(
       id,
       validatedData,
@@ -112,6 +128,35 @@ export async function PUT(
     )
       .populate("purchaseBankAccountId", "label")
       .populate("createdBy", "name");
+
+    // Create sale automatically when status changes to "vendu"
+    if (isBeingSold && bag) {
+      const existingSale = await Sale.findOne({ bagId: id });
+      if (!existingSale) {
+        const salePrice = bag.salePrice!;
+        const salePlatform = bag.salePlatform!;
+        const bankAccountId = bag.purchaseBankAccountId;
+
+        // Calculate margin
+        const totalCost = bag.purchasePrice + (bag.refurbishmentCost || 0);
+        const margin = salePrice - totalCost;
+        const marginPercent = totalCost > 0 ? (margin / totalCost) * 100 : 0;
+
+        await Sale.create({
+          bagId: id,
+          saleDate: new Date(),
+          salePrice,
+          salePlatform,
+          platformFees: 0,
+          shippingCost: 0,
+          bankAccountId,
+          margin,
+          marginPercent,
+          notes: bag.saleNotes || "",
+          soldBy: session.user.id,
+        });
+      }
+    }
 
     return NextResponse.json(bag);
   } catch (error) {
