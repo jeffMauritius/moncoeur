@@ -94,16 +94,8 @@ export async function PUT(
       );
     }
 
-    // Prevent changing status to non-vendu if already sold
-    if (existingBag.status === "vendu" && validatedData.status && validatedData.status !== "vendu") {
-      const sale = await Sale.findOne({ bagId: id });
-      if (sale) {
-        return NextResponse.json(
-          { error: "Ce sac a deja ete vendu. Supprimez d'abord la vente." },
-          { status: 400 }
-        );
-      }
-    }
+    // Check if status is being changed from "vendu" to another status
+    const isBeingUnsold = existingBag.status === "vendu" && validatedData.status && validatedData.status !== "vendu";
 
     // Check if status is being changed to "vendu"
     const isBeingSold = validatedData.status === "vendu" && existingBag.status !== "vendu";
@@ -128,6 +120,11 @@ export async function PUT(
     )
       .populate("purchaseBankAccountId", "label")
       .populate("createdBy", "name");
+
+    // Delete sale automatically when status changes from "vendu" to another status
+    if (isBeingUnsold) {
+      await Sale.findOneAndDelete({ bagId: id });
+    }
 
     // Create sale automatically when status changes to "vendu"
     if (isBeingSold && bag) {
