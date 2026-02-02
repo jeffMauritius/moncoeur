@@ -19,6 +19,7 @@ const updateBagSchema = z.object({
   refurbishmentProvider: z.string().optional(),
   refurbishmentNotes: z.string().optional(),
   salePrice: z.number().min(0).optional(),
+  salePlatform: z.enum(["vinted", "vestiaire_collectif", "leboncoin", "autre"]).optional(),
   saleNotes: z.string().optional(),
   photos: z.array(z.string()).optional(),
   status: z.enum([

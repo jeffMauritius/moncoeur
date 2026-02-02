@@ -29,6 +29,7 @@ export const BRANDS = [
 export const PLATFORMS = {
   vinted: 'Vinted',
   vestiaire_collectif: 'Vestiaire Collectif',
+  leboncoin: 'Le Bon Coin',
   autre: 'Autre',
 } as const;
 

@@ -35,6 +35,7 @@ export interface IBagDocument {
   refurbishmentProvider?: string;
   refurbishmentNotes?: string;
   salePrice?: number;
+  salePlatform?: Platform;
   saleNotes?: string;
   photos: string[];
   status: BagStatus;
@@ -115,6 +116,10 @@ const BagSchema = new Schema<IBagDocument>(
     salePrice: {
       type: Number,
       min: [0, "Le prix ne peut pas etre negatif"],
+    },
+    salePlatform: {
+      type: String,
+      enum: ["vinted", "vestiaire_collectif", "leboncoin", "autre"],
     },
     saleNotes: {
       type: String,

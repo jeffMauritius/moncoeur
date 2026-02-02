@@ -48,6 +48,7 @@ interface Bag {
   refurbishmentProvider?: string;
   refurbishmentNotes?: string;
   salePrice?: number;
+  salePlatform?: string;
   saleNotes?: string;
   photos: string[];
   status: string;
@@ -79,6 +80,7 @@ export default function EditBagPage() {
     refurbishmentNotes: "",
     status: "en_commande",
     salePrice: "",
+    salePlatform: "",
     saleNotes: "",
   });
 
@@ -111,6 +113,7 @@ export default function EditBagPage() {
             refurbishmentNotes: bag.refurbishmentNotes || "",
             status: bag.status,
             salePrice: bag.salePrice?.toString() || "",
+            salePlatform: bag.salePlatform || "",
             saleNotes: bag.saleNotes || "",
           });
           setPhotos(bag.photos || []);
@@ -471,17 +474,37 @@ export default function EditBagPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="salePrice">Prix de vente (EUR)</Label>
-                <Input
-                  id="salePrice"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.salePrice}
-                  onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
-                  placeholder="0.00"
-                />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="salePrice">Prix de vente (EUR)</Label>
+                  <Input
+                    id="salePrice"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.salePrice}
+                    onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="salePlatform">Plateforme de vente</Label>
+                  <Select
+                    value={formData.salePlatform}
+                    onValueChange={(value) => setFormData({ ...formData, salePlatform: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selectionnez une plateforme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PLATFORMS).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="saleNotes">Commentaire</Label>
