@@ -79,6 +79,7 @@ export default function EditBagPage() {
     refurbishmentProvider: "",
     refurbishmentNotes: "",
     status: "en_commande",
+    saleDate: "",
     salePrice: "",
     salePlatform: "",
     saleNotes: "",
@@ -112,6 +113,7 @@ export default function EditBagPage() {
             refurbishmentProvider: bag.refurbishmentProvider || "",
             refurbishmentNotes: bag.refurbishmentNotes || "",
             status: bag.status,
+            saleDate: bag.saleDate ? new Date(bag.saleDate).toISOString().split("T")[0] : "",
             salePrice: bag.salePrice?.toString() || "",
             salePlatform: bag.salePlatform || "",
             saleNotes: bag.saleNotes || "",
@@ -183,6 +185,7 @@ export default function EditBagPage() {
           ...formData,
           purchasePrice: parseFloat(formData.purchasePrice),
           refurbishmentCost: parseFloat(formData.refurbishmentCost) || 0,
+          saleDate: formData.saleDate || undefined,
           salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
           photos,
         }),
@@ -474,7 +477,16 @@ export default function EditBagPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="saleDate">Date de vente</Label>
+                  <Input
+                    id="saleDate"
+                    type="date"
+                    value={formData.saleDate}
+                    onChange={(e) => setFormData({ ...formData, saleDate: e.target.value })}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="salePrice">Prix de vente (EUR)</Label>
                   <Input

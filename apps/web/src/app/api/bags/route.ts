@@ -21,6 +21,7 @@ const createBagSchema = z.object({
   refurbishmentCost: z.number().min(0).optional().default(0),
   refurbishmentProvider: z.string().optional(),
   refurbishmentNotes: z.string().optional(),
+  saleDate: z.string().transform((str) => new Date(str)).optional(),
   salePrice: z.number().min(0).optional(),
   salePlatform: z.enum(["vinted", "vestiaire_collectif", "leboncoin", "autre"]).optional(),
   saleNotes: z.string().optional(),

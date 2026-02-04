@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Video } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 import { MobileSidebar } from "./mobile-sidebar";
 
@@ -43,14 +43,6 @@ export function Header({ user }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Video Chat Button */}
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/video-chat">
-            <Video className="mr-2 h-4 w-4" />
-            Video Chat
-          </Link>
-        </Button>
-
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

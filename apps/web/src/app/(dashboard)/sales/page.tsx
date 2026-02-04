@@ -243,9 +243,9 @@ export default function SalesPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4">
+          <div className="grid gap-3 sm:flex sm:flex-wrap sm:gap-4">
             <Select value={bankAccountFilter} onValueChange={setBankAccountFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Tous les comptes" />
               </SelectTrigger>
               <SelectContent>
@@ -259,7 +259,7 @@ export default function SalesPage() {
             </Select>
 
             <Select value={platformFilter} onValueChange={setPlatformFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Toutes les plateformes" />
               </SelectTrigger>
               <SelectContent>
@@ -279,7 +279,7 @@ export default function SalesPage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-[160px]"
+                className="flex-1 sm:w-[160px]"
               />
             </div>
 
@@ -290,11 +290,11 @@ export default function SalesPage() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-[160px]"
+                className="flex-1 sm:w-[160px]"
               />
             </div>
 
-            <Button variant="outline" onClick={resetFilters}>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={resetFilters}>
               <RotateCcw className="mr-2 h-4 w-4" />
               Reinitialiser
             </Button>

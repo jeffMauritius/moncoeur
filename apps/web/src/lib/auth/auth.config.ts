@@ -11,8 +11,7 @@ export const authConfig: NextAuthConfig = {
       const isOnDashboard = !nextUrl.pathname.startsWith("/login");
       const isOnAdminPage =
         nextUrl.pathname.startsWith("/users") ||
-        nextUrl.pathname.startsWith("/bank-accounts") ||
-        nextUrl.pathname.startsWith("/import");
+        nextUrl.pathname.startsWith("/bank-accounts");
 
       if (isOnDashboard) {
         if (isLoggedIn) {

@@ -11,7 +11,6 @@ import {
   Landmark,
   Users,
   Settings,
-  FileSpreadsheet,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -24,7 +23,6 @@ const navigation = [
   { name: "Ventes", href: "/sales", icon: ShoppingCart, roles: ["admin", "seller"] },
   { name: "Comptes bancaires", href: "/bank-accounts", icon: Landmark, roles: ["admin"] },
   { name: "Utilisateurs", href: "/users", icon: Users, roles: ["admin"] },
-  { name: "Import Excel", href: "/import", icon: FileSpreadsheet, roles: ["admin"] },
   { name: "Parametres", href: "/settings", icon: Settings, roles: ["admin"] },
 ];
 

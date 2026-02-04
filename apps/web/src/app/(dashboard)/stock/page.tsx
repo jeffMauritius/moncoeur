@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, QrCode, Eye, Loader2, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Eye, Loader2, Package, ChevronLeft, ChevronRight } from "lucide-react";
 
 const STATUSES = {
   en_commande: { label: "En commande", color: "bg-yellow-100 text-yellow-800" },
@@ -121,33 +121,25 @@ export default function StockPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Stock</h1>
           <p className="text-muted-foreground">
             Gerez votre inventaire de sacs
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/stock/scan">
-              <QrCode className="mr-2 h-4 w-4" />
-              Scanner
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/stock/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Nouveau sac
-            </Link>
-          </Button>
-        </div>
+        <Button className="w-full sm:w-auto" asChild>
+          <Link href="/stock/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Ajouter un nouveau sac
+          </Link>
+        </Button>
       </div>
 
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <form onSubmit={handleSearch} className="flex gap-4">
+          <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -157,23 +149,25 @@ export default function StockPage() {
                 className="pl-9"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Tous les statuts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="disponible">Disponible (Prêt + En vente)</SelectItem>
-                {Object.entries(STATUSES).map(([key, { label }]) => (
-                  <SelectItem key={key} value={key}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button type="submit" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rechercher"}
-            </Button>
+            <div className="flex gap-3 sm:gap-4">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="flex-1 sm:w-[200px]">
+                  <SelectValue placeholder="Tous les statuts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="disponible">Disponible (Prêt + En vente)</SelectItem>
+                  {Object.entries(STATUSES).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button type="submit" disabled={loading}>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rechercher"}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

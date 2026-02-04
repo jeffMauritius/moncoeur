@@ -66,40 +66,41 @@ export default async function BagDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/stock">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" asChild className="gap-1">
+          <Link href="/stock">
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Link>
+        </Button>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold tracking-tight">
-                {bag.brand} - {bag.model}
-              </h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+              {bag.brand} - {bag.model}
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
               <Badge className={STATUS_COLORS[bag.status] || ""}>
                 {STATUSES[bag.status as keyof typeof STATUSES] || bag.status}
               </Badge>
+              <span className="text-muted-foreground font-mono text-sm">{bag.reference}</span>
             </div>
-            <p className="text-muted-foreground font-mono">{bag.reference}</p>
           </div>
-        </div>
-        <div className="flex gap-2">
-          {bag.status !== "vendu" && (
-            <Button asChild>
-              <Link href={`/sales/new?bagId=${bag._id}`}>
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Vendre
+          <div className="flex gap-2 w-full md:w-auto">
+            {bag.status !== "vendu" && (
+              <Button size="sm" asChild className="flex-1 md:flex-initial">
+                <Link href={`/sales/new?bagId=${bag._id}`}>
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Vendre
+                </Link>
+              </Button>
+            )}
+            <Button variant="outline" size="sm" asChild className="flex-1 md:flex-initial">
+              <Link href={`/stock/${bag._id}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Modifier
               </Link>
             </Button>
-          )}
-          <Button variant="outline" asChild>
-            <Link href={`/stock/${bag._id}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Modifier
-            </Link>
-          </Button>
+          </div>
         </div>
       </div>
 

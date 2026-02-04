@@ -18,6 +18,7 @@ const updateBagSchema = z.object({
   refurbishmentCost: z.number().min(0).optional(),
   refurbishmentProvider: z.string().optional(),
   refurbishmentNotes: z.string().optional(),
+  saleDate: z.string().transform((str) => new Date(str)).optional(),
   salePrice: z.number().min(0).optional(),
   salePlatform: z.enum(["vinted", "vestiaire_collectif", "leboncoin", "autre"]).optional(),
   saleNotes: z.string().optional(),
@@ -141,7 +142,7 @@ export async function PUT(
 
         await Sale.create({
           bagId: id,
-          saleDate: new Date(),
+          saleDate: bag.saleDate || new Date(),
           salePrice,
           salePlatform,
           platformFees: 0,

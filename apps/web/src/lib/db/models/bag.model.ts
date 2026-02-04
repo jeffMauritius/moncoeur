@@ -34,6 +34,7 @@ export interface IBagDocument {
   refurbishmentCost: number;
   refurbishmentProvider?: string;
   refurbishmentNotes?: string;
+  saleDate?: Date;
   salePrice?: number;
   salePlatform?: Platform;
   saleNotes?: string;
@@ -112,6 +113,9 @@ const BagSchema = new Schema<IBagDocument>(
     refurbishmentNotes: {
       type: String,
       trim: true,
+    },
+    saleDate: {
+      type: Date,
     },
     salePrice: {
       type: Number,
