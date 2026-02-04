@@ -42,6 +42,12 @@ export interface Bag {
   // Photos
   photos: string[];
 
+  // Sale info
+  saleDate?: Date;
+  salePrice?: number;
+  salePlatform?: Platform;
+  saleNotes?: string;
+
   // Status
   status: BagStatus;
 
@@ -88,4 +94,8 @@ export interface UpdateBagDto {
   refurbishmentNotes?: string;
   photos?: string[];
   status?: BagStatus;
+  saleDate?: Date;
+  salePrice?: number;
+  salePlatform?: Platform;
+  saleNotes?: string;
 }
