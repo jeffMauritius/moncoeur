@@ -47,6 +47,7 @@ interface Bag {
   refurbishmentCost: number;
   refurbishmentProvider?: string;
   refurbishmentNotes?: string;
+  saleDate?: string;
   salePrice?: number;
   salePlatform?: string;
   saleNotes?: string;
