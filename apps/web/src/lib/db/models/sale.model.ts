@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import Bag from "./bag.model";
 
-export type Platform = "vinted" | "vestiaire_collectif" | "autre";
+export type Platform = "vinted" | "vestiaire_collectif" | "leboncoin" | "autre";
 
 export interface ISale extends Document {
   _id: mongoose.Types.ObjectId;
@@ -39,7 +39,7 @@ const SaleSchema = new Schema<ISale>(
     },
     salePlatform: {
       type: String,
-      enum: ["vinted", "vestiaire_collectif", "autre"],
+      enum: ["vinted", "vestiaire_collectif", "leboncoin", "autre"],
       required: [true, "Plateforme de vente est requise"],
     },
     platformFees: {

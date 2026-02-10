@@ -142,7 +142,32 @@ export async function PUT(
       if (validatedData.saleNotes !== undefined) saleUpdateData.notes = validatedData.saleNotes;
 
       if (Object.keys(saleUpdateData).length > 0) {
-        await Sale.findOneAndUpdate({ bagId: id }, saleUpdateData);
+        const updatedSale = await Sale.findOneAndUpdate({ bagId: id }, saleUpdateData);
+
+        // If no Sale record exists, create one
+        if (!updatedSale) {
+          const salePrice = bag.salePrice;
+          const salePlatform = bag.salePlatform;
+          if (salePrice && salePlatform) {
+            const totalCost = bag.purchasePrice + (bag.refurbishmentCost || 0);
+            const margin = salePrice - totalCost;
+            const marginPercent = totalCost > 0 ? (margin / totalCost) * 100 : 0;
+
+            await Sale.create({
+              bagId: id,
+              saleDate: bag.saleDate || new Date(),
+              salePrice,
+              salePlatform,
+              platformFees: 0,
+              shippingCost: 0,
+              bankAccountId: bag.purchaseBankAccountId,
+              margin,
+              marginPercent,
+              notes: bag.saleNotes || "",
+              soldBy: session.user.id,
+            });
+          }
+        }
       }
     }
 

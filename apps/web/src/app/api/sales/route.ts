@@ -11,7 +11,7 @@ const createSaleSchema = z.object({
   bagId: z.string().min(1, "Sac est requis"),
   saleDate: z.string().transform((str) => new Date(str)),
   salePrice: z.number().min(0, "Le prix ne peut pas etre negatif"),
-  salePlatform: z.enum(["vinted", "vestiaire_collectif", "autre"]),
+  salePlatform: z.enum(["vinted", "vestiaire_collectif", "leboncoin", "autre"]),
   platformFees: z.number().min(0).optional().default(0),
   shippingCost: z.number().min(0).optional().default(0),
   bankAccountId: z.string().min(1, "Compte bancaire est requis"),

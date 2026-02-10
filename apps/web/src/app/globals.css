@@ -66,4 +66,22 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Fix native date picker on mobile (iOS Safari / Android Chrome) */
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 2.5rem;
+    position: relative;
+  }
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
 }
