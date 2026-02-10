@@ -17,7 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -29,16 +28,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 
 interface BankAccount {
   _id: string;
   label: string;
-  description?: string;
-  isActive: boolean;
-  createdBy: { name: string };
-  createdAt: string;
+  revenue: number;
 }
 
 export default function BankAccountsPage() {
@@ -48,7 +43,7 @@ export default function BankAccountsPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
-  const [formData, setFormData] = useState({ label: "", description: "" });
+  const [formData, setFormData] = useState({ label: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,7 +79,7 @@ export default function BankAccountsPage() {
 
       if (res.ok) {
         setIsCreateOpen(false);
-        setFormData({ label: "", description: "" });
+        setFormData({ label: "" });
         fetchAccounts();
       } else {
         const data = await res.json();
@@ -113,7 +108,7 @@ export default function BankAccountsPage() {
       if (res.ok) {
         setIsEditOpen(false);
         setSelectedAccount(null);
-        setFormData({ label: "", description: "" });
+        setFormData({ label: "" });
         fetchAccounts();
       } else {
         const data = await res.json();
@@ -153,7 +148,7 @@ export default function BankAccountsPage() {
 
   function openEdit(account: BankAccount) {
     setSelectedAccount(account);
-    setFormData({ label: account.label, description: account.description || "" });
+    setFormData({ label: account.label });
     setError(null);
     setIsEditOpen(true);
   }
@@ -184,7 +179,7 @@ export default function BankAccountsPage() {
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setFormData({ label: "", description: "" }); setError(null); }}>
+            <Button onClick={() => { setFormData({ label: "" }); setError(null); }}>
               <Plus className="mr-2 h-4 w-4" />
               Nouveau compte
             </Button>
@@ -199,23 +194,13 @@ export default function BankAccountsPage() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="label">Libelle *</Label>
+                  <Label htmlFor="label">Compte *</Label>
                   <Input
                     id="label"
                     value={formData.label}
                     onChange={(e) => setFormData({ ...formData, label: e.target.value })}
                     placeholder="Ex: Beatrice"
                     required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Description optionnelle"
-                    rows={3}
                   />
                 </div>
                 {error && (
@@ -252,10 +237,8 @@ export default function BankAccountsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Libelle</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Cree par</TableHead>
+                  <TableHead>Compte</TableHead>
+                  <TableHead className="text-right">CA {new Date().getFullYear()}</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -263,15 +246,9 @@ export default function BankAccountsPage() {
                 {accounts.map((account) => (
                   <TableRow key={account._id}>
                     <TableCell className="font-medium">{account.label}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {account.description || "-"}
+                    <TableCell className="text-right">
+                      {(account.revenue ?? 0).toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={account.isActive ? "default" : "secondary"}>
-                        {account.isActive ? "Actif" : "Inactif"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{account.createdBy?.name || "-"}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
@@ -308,21 +285,12 @@ export default function BankAccountsPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-label">Libelle *</Label>
+                <Label htmlFor="edit-label">Compte *</Label>
                 <Input
                   id="edit-label"
                   value={formData.label}
                   onChange={(e) => setFormData({ ...formData, label: e.target.value })}
                   required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
                 />
               </div>
               {error && (

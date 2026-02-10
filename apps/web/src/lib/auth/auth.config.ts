@@ -6,6 +6,20 @@ export const authConfig: NextAuthConfig = {
   providers: [], // Providers will be added in auth.ts
   trustHost: true, // Required for Vercel deployment
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as "admin" | "seller";
+      }
+      return session;
+    },
     async authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = !nextUrl.pathname.startsWith("/login");

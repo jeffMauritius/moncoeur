@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db/mongodb";
-import { BankAccount } from "@/lib/db/models";
+import { BankAccount, Sale } from "@/lib/db/models";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -23,9 +23,28 @@ export async function GET() {
 
     const bankAccounts = await BankAccount.find()
       .sort({ label: 1 })
-      .populate("createdBy", "name");
+      .lean();
 
-    return NextResponse.json(bankAccounts);
+    // Aggregate current year revenue per bank account
+    const now = new Date();
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const yearEnd = new Date(now.getFullYear() + 1, 0, 1);
+
+    const revenueAgg = await Sale.aggregate([
+      { $match: { saleDate: { $gte: yearStart, $lt: yearEnd } } },
+      { $group: { _id: "$bankAccountId", revenue: { $sum: "$salePrice" } } },
+    ]);
+
+    const revenueMap = new Map(
+      revenueAgg.map((r: { _id: string; revenue: number }) => [r._id.toString(), r.revenue])
+    );
+
+    const result = bankAccounts.map((a: Record<string, unknown>) => ({
+      ...a,
+      revenue: revenueMap.get((a._id as { toString(): string }).toString()) || 0,
+    }));
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error fetching bank accounts:", error);
     return NextResponse.json(
