@@ -22,7 +22,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Upload, X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Loader2, Trash2, Upload, X } from "lucide-react";
 import { BRANDS, CONDITIONS, PLATFORMS, STATUSES } from "@moncoeur/shared";
 
 interface BankAccount {
@@ -60,6 +71,7 @@ export default function EditBagPage() {
   const id = params.id as string;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fetchingBag, setFetchingBag] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,6 +183,26 @@ export default function EditBagPage() {
 
   function removePhoto(index: number) {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/bags/${id}`, { method: "DELETE" });
+
+      if (res.ok) {
+        router.push("/stock");
+      } else {
+        const data = await res.json();
+        setError(data.error);
+      }
+    } catch {
+      setError("Erreur lors de la suppression");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -588,14 +620,46 @@ export default function EditBagPage() {
           </div>
         )}
 
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" asChild>
-            <Link href={`/stock/${id}`}>Annuler</Link>
-          </Button>
-          <Button type="submit" disabled={loading || uploading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Enregistrer les modifications
-          </Button>
+        <div className="flex justify-between">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button type="button" variant="destructive" disabled={deleting}>
+                {deleting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Supprimer
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer ce sac ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est irreversible. Le sac et toutes ses photos seront definitivement supprimes.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <div className="flex gap-4">
+            <Button type="button" variant="outline" asChild>
+              <Link href={`/stock/${id}`}>Annuler</Link>
+            </Button>
+            <Button type="submit" disabled={loading || uploading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enregistrer les modifications
+            </Button>
+          </div>
         </div>
       </form>
     </div>
