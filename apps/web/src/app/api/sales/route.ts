@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const bankAccountId = searchParams.get("bankAccountId");
     const platform = searchParams.get("platform");
+    const brand = searchParams.get("brand");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const page = parseInt(searchParams.get("page") || "1");
@@ -46,6 +47,11 @@ export async function GET(request: NextRequest) {
 
     if (platform && platform !== "all") {
       query.salePlatform = platform;
+    }
+
+    if (brand && brand !== "all") {
+      const matchingBags = await Bag.find({ brand }).select("_id").lean();
+      query.bagId = { $in: matchingBags.map((b) => b._id) };
     }
 
     // Date range filter

@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Eye, Loader2, ShoppingCart, Package, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
-import { PLATFORMS } from "@moncoeur/shared";
+import { PLATFORMS, BRANDS } from "@moncoeur/shared";
 
 interface BankAccount {
   _id: string;
@@ -78,11 +78,20 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [bankAccountFilter, setBankAccountFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
-  const [viewMode, setViewMode] = useState<"month" | "year">("month");
+  const [brandFilter, setBrandFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"month" | "year" | "custom">("month");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
 
   const { startDate, endDate } = useMemo(() => {
+    if (viewMode === "custom") {
+      return {
+        startDate: customStartDate || "",
+        endDate: customEndDate || "",
+      };
+    }
     if (viewMode === "year") {
       return {
         startDate: `${selectedYear}-01-01`,
@@ -95,7 +104,7 @@ export default function SalesPage() {
       startDate: `${selectedYear}-${month}-01`,
       endDate: `${selectedYear}-${month}-${String(lastDay).padStart(2, "0")}`,
     };
-  }, [viewMode, selectedYear, selectedMonth]);
+  }, [viewMode, selectedYear, selectedMonth, customStartDate, customEndDate]);
 
   useEffect(() => {
     async function fetchBankAccounts() {
@@ -124,6 +133,9 @@ export default function SalesPage() {
       if (platformFilter !== "all") {
         params.append("platform", platformFilter);
       }
+      if (brandFilter !== "all") {
+        params.append("brand", brandFilter);
+      }
       if (startDate) {
         params.append("startDate", startDate);
       }
@@ -146,7 +158,7 @@ export default function SalesPage() {
 
   useEffect(() => {
     fetchSales(1);
-  }, [bankAccountFilter, platformFilter, startDate, endDate]);
+  }, [bankAccountFilter, platformFilter, brandFilter, startDate, endDate]);
 
   function handlePageChange(newPage: number) {
     fetchSales(newPage);
@@ -155,9 +167,12 @@ export default function SalesPage() {
   function resetFilters() {
     setBankAccountFilter("all");
     setPlatformFilter("all");
+    setBrandFilter("all");
     setViewMode("month");
     setSelectedYear(new Date().getFullYear());
     setSelectedMonth(new Date().getMonth());
+    setCustomStartDate("");
+    setCustomEndDate("");
   }
 
   function goToPrevious() {
@@ -300,20 +315,45 @@ export default function SalesPage() {
               >
                 Annee
               </Button>
+              <Button
+                variant={viewMode === "custom" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("custom")}
+              >
+                Personnalise
+              </Button>
             </div>
 
-            {/* Period navigation */}
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={goToPrevious}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="min-w-[160px] text-center font-medium">
-                {periodLabel}
-              </span>
-              <Button variant="outline" size="icon" onClick={goToNext}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            {/* Period navigation or custom date inputs */}
+            {viewMode === "custom" ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="rounded-md border px-3 py-1.5 text-sm"
+                />
+                <span className="text-muted-foreground">—</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="rounded-md border px-3 py-1.5 text-sm"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={goToPrevious}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="min-w-[160px] text-center font-medium">
+                  {periodLabel}
+                </span>
+                <Button variant="outline" size="icon" onClick={goToNext}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
 
             <Select value={bankAccountFilter} onValueChange={setBankAccountFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
@@ -338,6 +378,20 @@ export default function SalesPage() {
                 {Object.entries(PLATFORMS).map(([key, label]) => (
                   <SelectItem key={key} value={key}>
                     {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={brandFilter} onValueChange={setBrandFilter}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Toutes les marques" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les marques</SelectItem>
+                {BRANDS.map((brand) => (
+                  <SelectItem key={brand} value={brand}>
+                    {brand}
                   </SelectItem>
                 ))}
               </SelectContent>
