@@ -127,6 +127,25 @@ export async function PUT(
       await Sale.findOneAndDelete({ bagId: id });
     }
 
+    // Update existing sale when bag is already sold and stays sold
+    const isStillSold = !isBeingSold && !isBeingUnsold && existingBag.status === "vendu" && (!validatedData.status || validatedData.status === "vendu");
+    if (isStillSold && bag) {
+      const saleUpdateData: Record<string, unknown> = {};
+      if (validatedData.saleDate !== undefined) saleUpdateData.saleDate = validatedData.saleDate;
+      if (validatedData.salePrice !== undefined) {
+        saleUpdateData.salePrice = validatedData.salePrice;
+        const totalCost = bag.purchasePrice + (bag.refurbishmentCost || 0);
+        saleUpdateData.margin = validatedData.salePrice - totalCost;
+        saleUpdateData.marginPercent = totalCost > 0 ? ((validatedData.salePrice - totalCost) / totalCost) * 100 : 0;
+      }
+      if (validatedData.salePlatform !== undefined) saleUpdateData.salePlatform = validatedData.salePlatform;
+      if (validatedData.saleNotes !== undefined) saleUpdateData.notes = validatedData.saleNotes;
+
+      if (Object.keys(saleUpdateData).length > 0) {
+        await Sale.findOneAndUpdate({ bagId: id }, saleUpdateData);
+      }
+    }
+
     // Create sale automatically when status changes to "vendu"
     if (isBeingSold && bag) {
       const existingSale = await Sale.findOne({ bagId: id });
