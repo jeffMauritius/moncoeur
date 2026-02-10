@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Eye, Loader2, ShoppingCart, Package, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { PLATFORMS } from "@moncoeur/shared";
 
@@ -63,15 +61,10 @@ interface Pagination {
   totalPages: number;
 }
 
-// Get current year date range for default filter
-function getCurrentYearDateRange() {
-  const year = new Date().getFullYear();
-  const startDate = `${year}-01-01`;
-  const endDate = `${year}-12-31`;
-  return { startDate, endDate };
-}
-
-const defaultDateRange = getCurrentYearDateRange();
+const MONTH_NAMES = [
+  "Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Aout", "Septembre", "Octobre", "Novembre", "Decembre",
+];
 
 export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -85,8 +78,24 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [bankAccountFilter, setBankAccountFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
-  const [startDate, setStartDate] = useState(defaultDateRange.startDate);
-  const [endDate, setEndDate] = useState(defaultDateRange.endDate);
+  const [viewMode, setViewMode] = useState<"month" | "year">("month");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+
+  const { startDate, endDate } = useMemo(() => {
+    if (viewMode === "year") {
+      return {
+        startDate: `${selectedYear}-01-01`,
+        endDate: `${selectedYear}-12-31`,
+      };
+    }
+    const month = String(selectedMonth + 1).padStart(2, "0");
+    const lastDay = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+    return {
+      startDate: `${selectedYear}-${month}-01`,
+      endDate: `${selectedYear}-${month}-${String(lastDay).padStart(2, "0")}`,
+    };
+  }, [viewMode, selectedYear, selectedMonth]);
 
   useEffect(() => {
     async function fetchBankAccounts() {
@@ -146,10 +155,41 @@ export default function SalesPage() {
   function resetFilters() {
     setBankAccountFilter("all");
     setPlatformFilter("all");
-    const { startDate, endDate } = getCurrentYearDateRange();
-    setStartDate(startDate);
-    setEndDate(endDate);
+    setViewMode("month");
+    setSelectedYear(new Date().getFullYear());
+    setSelectedMonth(new Date().getMonth());
   }
+
+  function goToPrevious() {
+    if (viewMode === "year") {
+      setSelectedYear((y) => y - 1);
+    } else {
+      if (selectedMonth === 0) {
+        setSelectedMonth(11);
+        setSelectedYear((y) => y - 1);
+      } else {
+        setSelectedMonth((m) => m - 1);
+      }
+    }
+  }
+
+  function goToNext() {
+    if (viewMode === "year") {
+      setSelectedYear((y) => y + 1);
+    } else {
+      if (selectedMonth === 11) {
+        setSelectedMonth(0);
+        setSelectedYear((y) => y + 1);
+      } else {
+        setSelectedMonth((m) => m + 1);
+      }
+    }
+  }
+
+  const periodLabel =
+    viewMode === "year"
+      ? String(selectedYear)
+      : `${MONTH_NAMES[selectedMonth]} ${selectedYear}`;
 
   // Calculate totals
   const totalRevenue = sales.reduce((sum, s) => sum + s.salePrice, 0);
@@ -243,7 +283,38 @@ export default function SalesPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid gap-3 sm:flex sm:flex-wrap sm:gap-4">
+          <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-center sm:gap-4">
+            {/* Period selector */}
+            <div className="flex items-center gap-1 rounded-md border p-1">
+              <Button
+                variant={viewMode === "month" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("month")}
+              >
+                Mois
+              </Button>
+              <Button
+                variant={viewMode === "year" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("year")}
+              >
+                Annee
+              </Button>
+            </div>
+
+            {/* Period navigation */}
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={goToPrevious}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="min-w-[160px] text-center font-medium">
+                {periodLabel}
+              </span>
+              <Button variant="outline" size="icon" onClick={goToNext}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
             <Select value={bankAccountFilter} onValueChange={setBankAccountFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Tous les comptes" />
@@ -271,28 +342,6 @@ export default function SalesPage() {
                 ))}
               </SelectContent>
             </Select>
-
-            <div className="flex items-center gap-2">
-              <Label htmlFor="startDate" className="text-sm whitespace-nowrap">Du</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="flex-1 sm:w-[160px]"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Label htmlFor="endDate" className="text-sm whitespace-nowrap">Au</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="flex-1 sm:w-[160px]"
-              />
-            </div>
 
             <Button variant="outline" className="w-full sm:w-auto" onClick={resetFilters}>
               <RotateCcw className="mr-2 h-4 w-4" />
