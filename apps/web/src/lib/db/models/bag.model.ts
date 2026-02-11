@@ -170,8 +170,16 @@ BagSchema.index({ createdAt: -1 });
 BagSchema.pre("save", async function (next) {
   if (this.isNew && !this.reference) {
     const year = new Date().getFullYear();
-    const count = await mongoose.models.Bag.countDocuments();
-    this.reference = `MC-${year}-${String(count + 1).padStart(5, "0")}`;
+    const prefix = `MC-${year}-`;
+    const lastBag = await mongoose.models.Bag.findOne(
+      { reference: { $regex: `^${prefix}` } },
+      { reference: 1 },
+      { sort: { reference: -1 } }
+    );
+    const nextNum = lastBag
+      ? parseInt(lastBag.reference.split("-")[2], 10) + 1
+      : 1;
+    this.reference = `${prefix}${String(nextNum).padStart(5, "0")}`;
   }
   next();
 });
