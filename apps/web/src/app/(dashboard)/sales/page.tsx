@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, Loader2, ShoppingCart, Package, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Loader2, ShoppingCart, Package, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { PLATFORMS, BRANDS } from "@moncoeur/shared";
 
 interface BankAccount {
@@ -67,6 +67,7 @@ const MONTH_NAMES = [
 ];
 
 export default function SalesPage() {
+  const router = useRouter();
   const [sales, setSales] = useState<Sale[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
@@ -433,12 +434,15 @@ export default function SalesPage() {
                     <TableHead>Marge</TableHead>
                     <TableHead>Plateforme</TableHead>
                     <TableHead>Compte</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sales.map((sale) => (
-                    <TableRow key={sale._id}>
+                    <TableRow
+                      key={sale._id}
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/sales/${sale._id}`)}
+                    >
                       <TableCell>
                         {sale.bagId?.photos && sale.bagId.photos.length > 0 ? (
                           <div className="relative w-12 h-12 rounded-md overflow-hidden bg-muted">
@@ -496,13 +500,6 @@ export default function SalesPage() {
                         {PLATFORMS[sale.salePlatform] || sale.salePlatform}
                       </TableCell>
                       <TableCell>{sale.bankAccountId?.label || "-"}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/sales/${sale._id}`}>
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
