@@ -75,6 +75,7 @@ export default function SalesPage() {
     total: 0,
     totalPages: 0,
   });
+  const [totals, setTotals] = useState({ totalRevenue: 0, totalMargin: 0, avgMarginPercent: 0 });
   const [loading, setLoading] = useState(true);
   const [bankAccountFilter, setBankAccountFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
@@ -148,6 +149,9 @@ export default function SalesPage() {
         const data = await res.json();
         setSales(data.sales);
         setPagination(data.pagination);
+        if (data.totals) {
+          setTotals(data.totals);
+        }
       }
     } catch {
       console.error("Error fetching sales");
@@ -206,13 +210,8 @@ export default function SalesPage() {
       ? String(selectedYear)
       : `${MONTH_NAMES[selectedMonth]} ${selectedYear}`;
 
-  // Calculate totals
-  const totalRevenue = sales.reduce((sum, s) => sum + s.salePrice, 0);
-  const totalMargin = sales.reduce((sum, s) => sum + s.margin, 0);
-  const avgMarginPercent =
-    sales.length > 0
-      ? sales.reduce((sum, s) => sum + s.marginPercent, 0) / sales.length
-      : 0;
+  // Use totals from API (calculated across all sales, not just current page)
+  const { totalRevenue, totalMargin, avgMarginPercent } = totals;
 
   if (loading && sales.length === 0) {
     return (

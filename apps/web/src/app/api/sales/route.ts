@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const [sales, total] = await Promise.all([
+    const [sales, total, totalsAgg] = await Promise.all([
       Sale.find(query)
         .sort({ saleDate: -1 })
         .skip(skip)
@@ -80,7 +80,20 @@ export async function GET(request: NextRequest) {
         .populate("bankAccountId", "label")
         .populate("soldBy", "name"),
       Sale.countDocuments(query),
+      Sale.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: "$salePrice" },
+            totalMargin: { $sum: "$margin" },
+            avgMarginPercent: { $avg: "$marginPercent" },
+          },
+        },
+      ]),
     ]);
+
+    const totals = totalsAgg[0] || { totalRevenue: 0, totalMargin: 0, avgMarginPercent: 0 };
 
     return NextResponse.json({
       sales,
@@ -89,6 +102,11 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+      },
+      totals: {
+        totalRevenue: totals.totalRevenue,
+        totalMargin: totals.totalMargin,
+        avgMarginPercent: totals.avgMarginPercent,
       },
     });
   } catch (error) {
