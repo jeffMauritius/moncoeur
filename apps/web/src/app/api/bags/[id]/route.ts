@@ -140,6 +140,7 @@ export async function PUT(
       }
       if (validatedData.salePlatform !== undefined) saleUpdateData.salePlatform = validatedData.salePlatform;
       if (validatedData.saleNotes !== undefined) saleUpdateData.notes = validatedData.saleNotes;
+      if (validatedData.purchaseBankAccountId !== undefined) saleUpdateData.bankAccountId = validatedData.purchaseBankAccountId;
 
       if (Object.keys(saleUpdateData).length > 0) {
         const updatedSale = await Sale.findOneAndUpdate({ bagId: id }, saleUpdateData);
