@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db/mongodb";
 import { Sale, Bag, User } from "@/lib/db/models";
 import { z } from "zod";
+import mongoose from "mongoose";
 import { sendEmail, saleNotificationEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
@@ -68,6 +69,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Build aggregation query with ObjectId casting (aggregate bypasses Mongoose casting)
+    const aggQuery: Record<string, unknown> = { ...query };
+    if (aggQuery.bankAccountId && typeof aggQuery.bankAccountId === "string") {
+      aggQuery.bankAccountId = new mongoose.Types.ObjectId(aggQuery.bankAccountId);
+    }
+    if (aggQuery.bagId && typeof aggQuery.bagId === "object" && "$in" in (aggQuery.bagId as Record<string, unknown>)) {
+      aggQuery.bagId = { $in: ((aggQuery.bagId as Record<string, unknown>).$in as unknown[]).map((id) => new mongoose.Types.ObjectId(String(id))) };
+    }
+
     const [sales, total, totalsAgg] = await Promise.all([
       Sale.find(query)
         .sort({ saleDate: -1 })
@@ -81,7 +91,7 @@ export async function GET(request: NextRequest) {
         .populate("soldBy", "name"),
       Sale.countDocuments(query),
       Sale.aggregate([
-        { $match: query },
+        { $match: aggQuery },
         {
           $group: {
             _id: null,
